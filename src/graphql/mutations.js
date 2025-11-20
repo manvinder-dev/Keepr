@@ -2,11 +2,8 @@
 // this is an auto generated file. This will be overwritten
 
 export const createFile = /* GraphQL */ `
-  mutation CreateFile(
-    $input: CreateFileInput!
-    $condition: ModelFileConditionInput
-  ) {
-    createFile(input: $input, condition: $condition) {
+  mutation CreateFile($input: CreateFileInput!) {
+    createFile(input: $input) {
       id
       name
       size
@@ -16,12 +13,10 @@ export const createFile = /* GraphQL */ `
       url
       uploadDate
       owner
-      createdAt
-      updatedAt
-      __typename
     }
   }
 `;
+
 export const updateFile = /* GraphQL */ `
   mutation UpdateFile(
     $input: UpdateFileInput!
@@ -44,23 +39,9 @@ export const updateFile = /* GraphQL */ `
   }
 `;
 export const deleteFile = /* GraphQL */ `
-  mutation DeleteFile(
-    $input: DeleteFileInput!
-    $condition: ModelFileConditionInput
-  ) {
-    deleteFile(input: $input, condition: $condition) {
+  mutation DeleteFile($input: DeleteFileInput!) {
+    deleteFile(input: $input) {
       id
-      name
-      size
-      type
-      category
-      s3Key
-      url
-      uploadDate
-      owner
-      createdAt
-      updatedAt
-      __typename
     }
   }
 `;
