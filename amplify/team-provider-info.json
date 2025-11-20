@@ -1,0 +1,26 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-keepr-dev-552b2-authRole",
+      "UnauthRoleArn": "arn:aws:iam::781108903378:role/amplify-keepr-dev-552b2-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::781108903378:role/amplify-keepr-dev-552b2-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-keepr-dev-552b2-deployment",
+      "UnauthRoleName": "amplify-keepr-dev-552b2-unauthRole",
+      "StackName": "amplify-keepr-dev-552b2",
+      "StackId": "arn:aws:cloudformation:us-east-1:781108903378:stack/amplify-keepr-dev-552b2/33b85200-c5dc-11f0-b428-12c5a0c2108f",
+      "AmplifyAppId": "d1ij18hnwsvbxp"
+    },
+    "categories": {
+      "auth": {
+        "keepr6f06396d": {}
+      },
+      "storage": {
+        "keepr": {}
+      },
+      "api": {
+        "keepr": {}
+      }
+    }
+  }
+}
