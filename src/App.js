@@ -3,9 +3,11 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { uploadData, getUrl, remove } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
+import { getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 import { createFile, deleteFile } from './graphql/mutations';
 import { listFiles as listFilesQuery } from './graphql/queries';
 import { Upload, File, Folder, LogOut, Search, Grid, List as ListIcon, Eye, Trash2 } from 'lucide-react';
+import logoImage from './Keepr Logo.png';
 
 const client = generateClient();
 
@@ -30,9 +32,55 @@ const getFileCategory = (fileName) => {
   return 'Others';
 };
 
+const formFields = {
+  signUp: {
+    given_name: {
+      order: 1,
+      label: 'First Name',
+      placeholder: 'Enter your first name',
+      isRequired: true,
+    },
+    family_name: {
+      order: 2,
+      label: 'Last Name',
+      placeholder: 'Enter your last name',
+      isRequired: true,
+    },
+    preferred_username: {
+      order: 3,
+      label: 'Preferred Username',
+      placeholder: 'Enter your preferred username',
+      isRequired: true,
+    },
+    email: {
+      order: 4,
+    },
+    password: {
+      order: 5,
+    },
+    confirm_password: {
+      order: 6,
+    },
+  },
+};
+
+const components = {
+  Header() {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <img 
+          src={logoImage} 
+          alt="Keepr Logo" 
+          style={{ maxWidth: '200px', height: 'auto' }}
+        />
+      </div>
+    );
+  },
+};
+
 function App() {
   return (
-    <Authenticator>
+    <Authenticator formFields={formFields} components={components}>
       {({ signOut, user }) => <CloudStorageApp signOut={signOut} user={user} />}
     </Authenticator>
   );
@@ -45,6 +93,38 @@ function CloudStorageApp({ signOut, user }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadProgress, setUploadProgress] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [userFirstName, setUserFirstName] = useState(null);
+
+  // Fetch user attributes to get first name
+  useEffect(() => {
+    const loadUserAttributes = async () => {
+      try {
+        const attributes = await fetchUserAttributes();
+        if (attributes.given_name) {
+          setUserFirstName(attributes.given_name);
+        } else if (attributes.preferred_username) {
+          setUserFirstName(attributes.preferred_username);
+        } else if (attributes.email) {
+          // Extract name from email (before @) as fallback
+          const emailName = attributes.email.split('@')[0];
+          setUserFirstName(emailName);
+        }
+      } catch (error) {
+        console.error('Error fetching user attributes:', error);
+        // Fallback to user object attributes if available
+        if (user?.attributes?.given_name) {
+          setUserFirstName(user.attributes.given_name);
+        } else if (user?.attributes?.preferred_username) {
+          setUserFirstName(user.attributes.preferred_username);
+        } else if (user?.attributes?.email) {
+          const emailName = user.attributes.email.split('@')[0];
+          setUserFirstName(emailName);
+        }
+      }
+    };
+    
+    loadUserAttributes();
+  }, [user]);
 
   const fetchFiles = useCallback(async () => {
     try {
@@ -52,7 +132,21 @@ function CloudStorageApp({ signOut, user }) {
       
       const result = await client.graphql({
         query: listFilesQuery,
+        authMode: 'userPool'
       });
+      
+      // Check for GraphQL errors
+      if (result.errors && result.errors.length > 0) {
+        console.error('GraphQL errors:', result.errors);
+        throw new Error(result.errors[0].message || 'Failed to fetch files');
+      }
+      
+      // Check if data exists
+      if (!result.data || !result.data.listFiles || !result.data.listFiles.items) {
+        console.warn('No files data in response');
+        setFiles([]);
+        return;
+      }
       
       const filesWithUrls = await Promise.all(
         result.data.listFiles.items.map(async (file) => {
@@ -67,7 +161,7 @@ function CloudStorageApp({ signOut, user }) {
             return { ...file, url: urlResult.url.toString() };
           } catch (error) {
             console.error('Error getting URL for file:', file.name, error);
-            return file;
+            return { ...file, url: null };
           }
         })
       );
@@ -75,6 +169,9 @@ function CloudStorageApp({ signOut, user }) {
       setFiles(filesWithUrls);
     } catch (error) {
       console.error('Error fetching files:', error);
+      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+      alert(`Error fetching files: ${errorMessage}`);
+      setFiles([]);
     } finally {
       setLoading(false);
     }
@@ -123,14 +220,22 @@ function CloudStorageApp({ signOut, user }) {
           category: category,
           s3Key: s3Key,
           url: urlResult.url.toString(),
-          uploadDate: new Date().toISOString(),
-          owner: user.username 
+          uploadDate: new Date().toISOString()
         };
 
-        await client.graphql({
+        const mutationResult = await client.graphql({
           query: createFile,
-          variables: { input: fileData }
+          variables: { input: fileData },
+          authMode: 'userPool'
         });
+
+        // Check for GraphQL errors
+        if (mutationResult.errors && mutationResult.errors.length > 0) {
+          console.error('GraphQL mutation errors:', mutationResult.errors);
+          throw new Error(mutationResult.errors[0].message || 'GraphQL mutation failed');
+        }
+        
+        console.log('File created successfully:', mutationResult.data?.createFile);
 
         setUploadProgress(null);
         
@@ -139,7 +244,8 @@ function CloudStorageApp({ signOut, user }) {
       } catch (error) {
         console.error('Error uploading file:', error);
         setUploadProgress(null);
-        alert(`Error uploading ${file.name}: ${error.message}`);
+        const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+        alert(`Error uploading ${file.name}: ${errorMessage}`);
       }
     }
   };
@@ -154,7 +260,8 @@ function CloudStorageApp({ signOut, user }) {
 
       await client.graphql({
         query: deleteFile,
-        variables: { input: { id: file.id } }
+        variables: { input: { id: file.id } },
+        authMode: 'userPool'
       });
 
       setFiles(prev => prev.filter(f => f.id !== file.id));
@@ -212,7 +319,7 @@ function CloudStorageApp({ signOut, user }) {
             </div>
             
             <div className="flex items-center space-x-4">
-              <span className="text-gray-600">Welcome, {user.username}</span>
+              <span className="text-gray-600">Welcome, {userFirstName || user?.attributes?.given_name || user?.attributes?.preferred_username || user?.attributes?.email?.split('@')[0] || 'User'}</span>
               <button
                 onClick={signOut}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import './aws-exports-config';
+import './amplifyconfiguration.js';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
