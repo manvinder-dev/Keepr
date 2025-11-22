@@ -98,6 +98,8 @@ function CloudStorageApp({ signOut, user }) {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [loading, setLoading] = useState(false);
   const [userFirstName, setUserFirstName] = useState(null);
+  const [fileToDelete, setFileToDelete] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Fetch user attributes to get first name
   useEffect(() => {
@@ -254,26 +256,38 @@ function CloudStorageApp({ signOut, user }) {
     }
   };
 
-  const handleDeleteFile = async (file) => {
-    if (!window.confirm(`Are you sure you want to delete ${file.name}?`)) {
-      return;
-    }
+  const handleDeleteClick = (file) => {
+    setFileToDelete(file);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!fileToDelete) return;
 
     try {
-      await remove({ key: file.s3Key });
+      await remove({ key: fileToDelete.s3Key });
 
       await client.graphql({
         query: deleteFile,
-        variables: { input: { id: file.id } },
+        variables: { input: { id: fileToDelete.id } },
         authMode: 'userPool'
       });
 
-      setFiles(prev => prev.filter(f => f.id !== file.id));
+      setFiles(prev => prev.filter(f => f.id !== fileToDelete.id));
+      setIsDeleteModalOpen(false);
+      setFileToDelete(null);
       
     } catch (error) {
       console.error('Error deleting file:', error);
       alert(`Error deleting file: ${error.message}`);
+      setIsDeleteModalOpen(false);
+      setFileToDelete(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
+    setFileToDelete(null);
   };
 
   const getFolders = () => {
@@ -472,7 +486,7 @@ function CloudStorageApp({ signOut, user }) {
                               <Eye size={16} className="text-blue-600" />
                             </button>
                             <button
-                              onClick={() => handleDeleteFile(file)}
+                              onClick={() => handleDeleteClick(file)}
                               className="p-2 bg-red-50 hover:bg-red-100 rounded"
                               title="Delete"
                             >
@@ -505,7 +519,7 @@ function CloudStorageApp({ signOut, user }) {
                             <Eye size={18} className="text-blue-600" />
                           </button>
                           <button
-                            onClick={() => handleDeleteFile(file)}
+                            onClick={() => handleDeleteClick(file)}
                             className="p-2 bg-red-50 hover:bg-red-100 rounded"
                             title="Delete"
                           >
@@ -521,6 +535,37 @@ function CloudStorageApp({ signOut, user }) {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && fileToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Delete File
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete <span className="font-medium text-gray-900">"{fileToDelete.name}"</span>? 
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={handleDeleteCancel}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
