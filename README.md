@@ -1,70 +1,76 @@
-# Getting Started with Create React App
+# Keepr: Secure Cloud Storage Solution
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Keepr** is a secure, user-authenticated cloud storage web application built with **React** and powered by **AWS Amplify**. It allows authenticated users to securely upload, store, categorize, view, and manage their files.
+
+## Features:
+
+  * **User Authentication**: Secure sign-up and sign-in powered by **AWS Cognito User Pools**. The required sign-up attributes include First Name, Last Name, Preferred Username, and Email.
+  * **Secure File Storage**: Files are stored securely on **AWS S3** with owner-level access control defined via GraphQL schema rules.
+  * **File Management**: Easily upload multiple files, view file details (size, name), preview/open files in a new tab, and delete files from storage.
+  * **Automatic Categorization**: Files are automatically organized into folders (categories) based on their file extension (e.g., `PDF Files`, `JPG Files`).
+  * **Search and Filter**: Functionality to search files by name and filter by the auto-generated file categories (folders).
+  * **UI/UX**: Clean, responsive interface using Tailwind CSS with toggleable **grid** and **list** views.
+
+## Tech Stack: 
+
+| Category | Technology | Notes |
+| :--- | :--- | :--- |
+| **Frontend** | **React** | Framework for the user interface. |
+| **Styling** | **Tailwind CSS** | Used for utility-first styling. |
+| **Cloud/Backend** | **AWS Amplify** | Provides the development platform, libraries, and CLI integration. |
+| **Authentication** | **AWS Cognito** | Manages user sign-up and sign-in. |
+| **API/Data** | **AWS AppSync (GraphQL)** | Manages data (file metadata and folders). |
+| **Storage** | **AWS S3** | Stores uploaded user files. |
+
+## Getting Started: 
+
+### Prerequisites
+
+You need the following installed locally:
+
+  * [Node.js](https://nodejs.org/en/) (version 14.0.0 or later, based on `react-scripts` v5.0.1 requirements).
+  * [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/).
+  * [AWS Amplify CLI](https://docs.amplify.aws/cli/): `npm install -g @aws-amplify/cli`
+
+### Backend Setup (AWS Amplify)
+
+This project contains AWS Amplify configuration files, so you can restore the backend environment.
+
+1.  **Pull the backend environment** (assuming you have AWS credentials configured):
+    ```bash
+    amplify pull
+    ```
+    *Note: This command usually configures your local environment based on the existing Amplify project files.*
+2.  **Ensure all resources are pushed** (if you need to update or if the initial pull is incomplete):
+    ```bash
+    amplify push
+    ```
+
+### Frontend Setup (React)
+
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+-----
 
 ## Available Scripts
 
-In the project directory, you can run:
+In the project directory, you can run the standard Create React App scripts:
 
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Runs the app in the development mode.
+Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) to view it in your browser.
+The page will reload when you make changes.
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Launches the test runner in the interactive watch mode.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Builds the app for production to the `build` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
