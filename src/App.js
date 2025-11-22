@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
-import { uploadData, getUrl, remove, list } from 'aws-amplify/storage';
+import { uploadData, getUrl, remove } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
-import { createFile, deleteFile, listFiles } from './graphql/mutations';
+import { createFile, deleteFile } from './graphql/mutations';
 import { listFiles as listFilesQuery } from './graphql/queries';
 import { Upload, File, Folder, LogOut, Search, Grid, List as ListIcon, Eye, Trash2 } from 'lucide-react';
 
 const client = generateClient();
 
-// File type categorization function
 const getFileCategory = (fileName) => {
   const ext = fileName.split('.').pop().toLowerCase();
   
@@ -47,25 +46,14 @@ function CloudStorageApp({ signOut, user }) {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load files on mount
-  useEffect(() => {
-    fetchFiles();
-  }, []);
-
-  // Fetch files from DynamoDB
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     try {
       setLoading(true);
+      
       const result = await client.graphql({
         query: listFilesQuery,
-        variables: {
-          filter: {
-            owner: { eq: user.username }
-          }
-        }
       });
       
-      // Get URLs for all files
       const filesWithUrls = await Promise.all(
         result.data.listFiles.items.map(async (file) => {
           try {
@@ -73,7 +61,7 @@ function CloudStorageApp({ signOut, user }) {
               key: file.s3Key,
               options: {
                 validateObjectExistence: false,
-                expiresIn: 3600 // URL expires in 1 hour
+                expiresIn: 3600
               }
             });
             return { ...file, url: urlResult.url.toString() };
@@ -90,9 +78,12 @@ function CloudStorageApp({ signOut, user }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.username]); 
 
-  // Handle file upload
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
+
   const handleFileUpload = async (e) => {
     const uploadedFiles = Array.from(e.target.files);
     
@@ -103,8 +94,7 @@ function CloudStorageApp({ signOut, user }) {
         
         setUploadProgress({ fileName: file.name, progress: 0 });
 
-        // Upload to S3
-        const result = await uploadData({
+        await uploadData({
           key: s3Key,
           data: file,
           options: {
@@ -118,7 +108,6 @@ function CloudStorageApp({ signOut, user }) {
           }
         }).result;
 
-        // Get the uploaded file URL
         const urlResult = await getUrl({
           key: s3Key,
           options: {
@@ -127,7 +116,6 @@ function CloudStorageApp({ signOut, user }) {
           }
         });
 
-        // Save metadata to DynamoDB
         const fileData = {
           name: file.name,
           size: file.size,
@@ -136,7 +124,7 @@ function CloudStorageApp({ signOut, user }) {
           s3Key: s3Key,
           url: urlResult.url.toString(),
           uploadDate: new Date().toISOString(),
-          owner: user.username
+          owner: user.username 
         };
 
         await client.graphql({
@@ -146,7 +134,6 @@ function CloudStorageApp({ signOut, user }) {
 
         setUploadProgress(null);
         
-        // Refresh files list
         await fetchFiles();
         
       } catch (error) {
@@ -157,23 +144,19 @@ function CloudStorageApp({ signOut, user }) {
     }
   };
 
-  // Handle file deletion
   const handleDeleteFile = async (file) => {
     if (!window.confirm(`Are you sure you want to delete ${file.name}?`)) {
       return;
     }
 
     try {
-      // Delete from S3
       await remove({ key: file.s3Key });
 
-      // Delete from DynamoDB
       await client.graphql({
         query: deleteFile,
         variables: { input: { id: file.id } }
       });
 
-      // Update local state
       setFiles(prev => prev.filter(f => f.id !== file.id));
       
     } catch (error) {
@@ -182,7 +165,6 @@ function CloudStorageApp({ signOut, user }) {
     }
   };
 
-  // Get folders with file counts
   const getFolders = () => {
     const folderMap = new Map();
     files.forEach(file => {
@@ -192,7 +174,6 @@ function CloudStorageApp({ signOut, user }) {
     return Array.from(folderMap.entries()).map(([name, count]) => ({ name, count }));
   };
 
-  // Get filtered files
   const getFilteredFiles = () => {
     let filteredFiles = selectedFolder 
       ? files.filter(f => f.category === selectedFolder)
@@ -220,7 +201,6 @@ function CloudStorageApp({ signOut, user }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -228,7 +208,7 @@ function CloudStorageApp({ signOut, user }) {
               <div className="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center">
                 <Upload className="text-white" size={24} />
               </div>
-              <h1 className="text-2xl font-bold text-gray-800">CloudStore</h1>
+              <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-teal-500">Keepr</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -246,7 +226,6 @@ function CloudStorageApp({ signOut, user }) {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search and Upload Bar */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex items-center justify-between">
           <div className="flex-1 max-w-xl">
             <div className="relative">
@@ -290,7 +269,6 @@ function CloudStorageApp({ signOut, user }) {
           </div>
         </div>
 
-        {/* Upload Progress */}
         {uploadProgress && (
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
             <div className="flex items-center justify-between mb-2">
@@ -313,7 +291,6 @@ function CloudStorageApp({ signOut, user }) {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Sidebar - Folders */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <h2 className="text-lg font-semibold mb-4">Folders</h2>
@@ -349,7 +326,6 @@ function CloudStorageApp({ signOut, user }) {
               </div>
             </div>
 
-            {/* Main Content - Files */}
             <div className="lg:col-span-3">
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4">
