@@ -8,28 +8,26 @@ import { createFile, deleteFile } from './graphql/mutations';
 import { listFiles as listFilesQuery } from './graphql/queries';
 import { Upload, File, Folder, LogOut, Search, Grid, List as ListIcon, Eye, Trash2 } from 'lucide-react';
 import logoImage from './Keepr Logo.png';
+import logoHomeImage from './Keepr Logo Home.png';
 
 const client = generateClient();
 
 const getFileCategory = (fileName) => {
-  const ext = fileName.split('.').pop().toLowerCase();
-  
-  const categories = {
-    'Images': ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'],
-    'Documents': ['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'],
-    'Spreadsheets': ['xls', 'xlsx', 'csv', 'ods'],
-    'Presentations': ['ppt', 'pptx', 'odp'],
-    'Videos': ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'],
-    'Audio': ['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'],
-    'Archives': ['zip', 'rar', '7z', 'tar', 'gz'],
-    'Code': ['js', 'jsx', 'ts', 'tsx', 'py', 'java', 'cpp', 'c', 'html', 'css', 'json', 'xml'],
-  };
-  
-  for (const [category, extensions] of Object.entries(categories)) {
-    if (extensions.includes(ext)) return category;
+  // Extract file extension
+  const parts = fileName.split('.');
+  if (parts.length < 2) {
+    // No extension found
+    return 'No Extension';
   }
   
-  return 'Others';
+  const ext = parts.pop().toLowerCase();
+  
+  // Create a category name from the extension
+  // Convert extension to uppercase and add " Files" suffix
+  // e.g., "pdf" -> "PDF Files", "jpg" -> "JPG Files"
+  const categoryName = ext.toUpperCase() + ' Files';
+  
+  return categoryName;
 };
 
 const formFields = {
@@ -67,11 +65,17 @@ const formFields = {
 const components = {
   Header() {
     return (
-      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        padding: '20px 0',
+        width: '100%'
+      }}>
         <img 
           src={logoImage} 
           alt="Keepr Logo" 
-          style={{ maxWidth: '200px', height: 'auto' }}
+          style={{ maxWidth: '200px', height: 'auto', display: 'block' }}
         />
       </div>
     );
@@ -312,9 +316,11 @@ function CloudStorageApp({ signOut, user }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 w-10 h-10 rounded-lg flex items-center justify-center">
-                <Upload className="text-white" size={24} />
-              </div>
+              <img 
+                src={logoHomeImage} 
+                alt="Keepr Logo" 
+                className="h-10 w-auto"
+              />
               <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-teal-500">Keepr</h1>
             </div>
             
