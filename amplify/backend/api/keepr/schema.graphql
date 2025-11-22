@@ -7,7 +7,6 @@ type File @model @auth(rules: [{allow: owner}]) {
   s3Key: String!
   url: String
   uploadDate: AWSDateTime!
-  owner: String
 }
 
 type Folder @model @auth(rules: [{allow: owner}]) {

@@ -26,10 +26,16 @@
     "userpoolClientGenerateSecret": false,
     "userpoolClientRefreshTokenValidity": 30,
     "userpoolClientWriteAttributes": [
-      "email"
+      "email",
+      "given_name",
+      "family_name",
+      "preferred_username"
     ],
     "userpoolClientReadAttributes": [
-      "email"
+      "email",
+      "given_name",
+      "family_name",
+      "preferred_username"
     ],
     "userpoolClientLambdaRole": "keepr66f06396d_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
